@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<title>RINO iOS</title>
+<style>
+:root{
+  --accent:#69d4ff;--glass:rgba(255,255,255,.15);--text:#fff;
+  --wall:linear-gradient(145deg,#07152f 0%,#183e73 43%,#8a4d9d 100%);
+  --brightness:1;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#080d18;color:var(--text)}
+button,input,textarea{font:inherit}
+button{border:0;color:inherit;cursor:pointer}
+#device{position:relative;width:100%;height:100dvh;overflow:hidden;background:var(--wall);filter:brightness(var(--brightness));isolation:isolate}
+#wallpaper{position:absolute;inset:0;background:var(--wall);z-index:-2;transition:background .4s}
+#wallpaper:before,#wallpaper:after{content:"";position:absolute;border-radius:50%;filter:blur(2px);opacity:.42}
+#wallpaper:before{width:70vw;height:70vw;max-width:560px;max-height:560px;left:-20%;top:12%;background:radial-gradient(circle at 35% 35%,#8feaff,#4268d9 45%,transparent 70%)}
+#wallpaper:after{width:80vw;height:80vw;max-width:600px;max-height:600px;right:-30%;bottom:-20%;background:radial-gradient(circle at 45% 45%,#f5a4df,#8d4ac4 45%,transparent 72%)}
+#status{position:absolute;z-index:30;top:0;left:0;right:0;height:34px;padding:8px 19px 0;display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700;text-shadow:0 1px 8px #0008;direction:ltr}
+.status-right{display:flex;gap:6px;align-items:center}
+#home{position:absolute;inset:34px 0 0;display:flex;flex-direction:column;padding:18px 18px calc(28px + env(safe-area-inset-bottom));}
+#lock{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;text-align:center;padding:65px 20px 40px;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.35));backdrop-filter:blur(1px);transition:transform .45s,opacity .4s}
+#lock.hidden{transform:translateY(-105%);opacity:0;pointer-events:none}
+.lock-date{font-size:18px;font-weight:500;margin-top:20px;text-shadow:0 2px 10px #0008}
+.lock-time{font-size:clamp(76px,19vw,112px);font-weight:200;letter-spacing:-5px;line-height:1.15;text-shadow:0 3px 18px #0006}
+.lock-bottom{margin-top:auto;display:flex;justify-content:space-between;width:min(330px,90%);align-items:center}
+.round-action{width:48px;height:48px;border-radius:50%;background:#ffffff24;backdrop-filter:blur(18px);font-size:21px;border:1px solid #ffffff25}
+.unlock-hint{font-size:13px;margin-top:24px;opacity:.9}
+#lock button{background:#ffffff24}
+.widget-row{display:flex;gap:10px;margin:14px 0 20px}
+.widget{flex:1;min-height:72px;border:1px solid #ffffff24;border-radius:19px;padding:12px;background:rgba(20,28,55,.25);backdrop-filter:blur(18px);font-size:12px}
+.widget strong{display:block;font-size:20px;margin-top:4px}
+#app-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px 12px;align-content:start;flex:1}
+.app-icon{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;padding:0;min-width:0;text-shadow:0 1px 5px #0009}
+.app-icon .glyph{width:clamp(48px,14vw,66px);height:clamp(48px,14vw,66px);border-radius:17px;display:grid;place-items:center;font-size:30px;box-shadow:0 5px 15px #0003,inset 0 1px 1px #ffffff55;position:relative;overflow:hidden}
+.app-icon .glyph:after{content:"";position:absolute;inset:0;background:linear-gradient(140deg,#ffffff35,transparent 50%);pointer-events:none}
+.app-icon span:last-child{font-size:11px;white-space:nowrap}
+.dock{height:91px;border-radius:28px;background:rgba(255,255,255,.2);border:1px solid #ffffff25;backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:space-evenly;padding:8px;margin-top:12px}
+.dock .app-icon span:last-child{display:none}
+.dock .glyph{width:clamp(49px,14vw,62px);height:clamp(49px,14vw,62px)}
+#page-dots{text-align:center;font-size:12px;letter-spacing:5px;opacity:.8;margin:10px 0 0}
+#home-indicator{position:absolute;z-index:100;bottom:7px;left:50%;transform:translateX(-50%);width:125px;height:5px;border-radius:9px;background:white;box-shadow:0 1px 4px #0005}
+#home-indicator.dark{background:#171717}
+#app-window{position:absolute;z-index:60;inset:0;background:#f5f6fa;color:#171923;display:none;flex-direction:column;animation:appIn .25s ease;overflow:hidden}
+@keyframes appIn{from{transform:scale(.93);opacity:.3}to{transform:scale(1);opacity:1}}
+.appbar{height:58px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.92);border-bottom:1px solid #ddd;flex-shrink:0}
+.appbar h2{font-size:17px;margin:0}
+.appbar button{background:#eef0f5;color:#1769d2;border-radius:20px;padding:7px 13px;font-weight:600}
+.appbody{padding:16px;overflow:auto;flex:1}
+.card{background:white;border-radius:17px;padding:15px;margin-bottom:12px;box-shadow:0 2px 12px #17223b0b}
+.muted{color:#78808e;font-size:13px}
+.big-number{font-size:34px;font-weight:300}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.primary{background:#087cff!important;color:#fff!important;border-radius:12px;padding:11px 15px}
+.soft{background:#eaf2ff;color:#087cff;border-radius:12px;padding:10px 13px}
+.field,textarea{width:100%;border:1px solid #dfe3ea;border-radius:12px;padding:12px;background:#fff;color:#171923;outline:none}
+textarea{resize:vertical;min-height:120px}
+.listitem{display:flex;align-items:center;gap:12px;padding:13px 3px;border-bottom:1px solid #edf0f4}
+.listitem:last-child{border:0}
+.listicon{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-size:19px;color:white}
+.toggle{width:48px;height:28px;border-radius:20px;background:#c8cdd5;position:relative;transition:.2s}
+.toggle:after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:white;top:3px;left:3px;transition:.2s;box-shadow:0 1px 3px #0003}
+.toggle.on{background:#31c45b}.toggle.on:after{left:23px}
+#control-center{position:absolute;z-index:80;inset:0 0 auto;height:min(78vh,650px);padding:48px 18px 22px;background:rgba(27,34,54,.88);backdrop-filter:blur(35px);border-radius:0 0 28px 28px;transform:translateY(-110%);transition:transform .35s;color:white}
+#control-center.show{transform:translateY(0)}
+.cc-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cc-tile{border-radius:18px;background:#ffffff22;padding:14px;min-height:66px;text-align:right}
+.cc-tile.active{background:#1685ff}
+.cc-tile strong{display:block;margin-top:5px;font-size:13px}
+.cc-slider{background:#ffffff20;border-radius:18px;padding:14px;margin-top:12px}
+.cc-slider input{width:100%;accent-color:#fff}
+#notification-panel{position:absolute;z-index:79;inset:0;background:rgba(20,27,45,.88);backdrop-filter:blur(30px);padding:50px 18px;color:white;transform:translateY(-110%);transition:transform .3s}
+#notification-panel.show{transform:translateY(0)}
+#toast{position:absolute;z-index:120;bottom:42px;left:50%;transform:translate(-50%,20px);opacity:0;background:#171923dd;color:white;padding:10px 17px;border-radius:22px;font-size:13px;pointer-events:none;transition:.25s;white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.calc{max-width:420px;margin:auto}
+.calc-display{height:115px;display:flex;align-items:flex-end;justify-content:flex-end;font-size:48px;padding:10px;overflow:hidden}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
+.calc-grid button{height:clamp(58px,15vw,75px);border-radius:50%;font-size:24px;background:#e4e6eb;color:#111}
+.calc-grid button.op{background:#ff9f0a;color:white}.calc-grid button.fn{background:#c9cbd0}
+.message-area{display:flex;flex-direction:column;gap:8px;min-height:220px}
+.bubble{max-width:82%;padding:10px 13px;border-radius:17px;background:#e6e8ee;align-self:flex-start;overflow-wrap:anywhere}
+.bubble.me{background:#1685ff;color:white;align-self:flex-end}
+.chat-compose{display:flex;gap:8px;margin-top:12px}
+.chat-compose input{flex:1;min-width:0}
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.photo-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;background:#e4e6eb}
+#search-results a{display:block;padding:12px 0;color:#087cff;border-bottom:1px solid #eee;overflow-wrap:anywhere}
+#music-audio{width:100%;margin-top:15px}
+.wallpaper-choice{height:75px;border-radius:14px;border:2px solid transparent}
+.wallpaper-choice.selected{border-color:#1685ff}
+@media(min-width:700px){
+ #device{max-width:430px;height:min(900px,94dvh);margin:3dvh auto;border:8px solid #161a24;border-radius:44px;box-shadow:0 25px 90px #0009}
+ body{background:radial-gradient(circle at 50% 20%,#28344e,#080d18 70%)}
+ #home-indicator{bottom:12px}
+ #status{top:5px}
+}
+</style>
+</head>
+<body>
+<div id="device">
+ <div id="wallpaper"></div>
+ <div id="status"><span id="status-time">9:41</span><span class="status-right"><span id="status-net">●</span><span>◕</span><span>▰</span><span>100%</span></span></div>
+ <section id="home">
+  <div class="widget-row">
+   <div class="widget"><span id="date-label">الثلاثاء، 17 نوفمبر</span><strong id="widget-time">9:41</strong></div>
+   <div class="widget">الطقس <strong>☀️ 24°</strong><span>طقس تجريبي</span></div>
+  </div>
+  <div id="app-grid"></div>
+  <div id="page-dots">● ○</div>
+  <div class="dock" id="dock"></div>
+ </section>
+ <section id="lock">
+  <div class="lock-date" id="lock-date">الثلاثاء، 17 نوفمبر</div>
+  <div class="lock-time" id="lock-time">9:41</div>
+  <div class="widget" style="width:min(300px,90%);margin-top:22px">🌤️ الطقس اليوم<strong>24°</strong><span>يوم جميل لاستكشاف RINO iOS</span></div>
+  <div class="lock-bottom">
+   <button class="round-action" onclick="toast('الكاميرا التجريبية متاحة من الشاشة الرئيسية')">📷</button>
+   <button class="round-action" onclick="unlock()">🔓</button>
+  </div>
+  <div class="unlock-hint">اضغط على القفل لفتح الشاشة</div>
+ </section>
+ <section id="control-center">
+  <div class="row" style="margin-bottom:15px"><strong style="font-size:20px">مركز التحكم</strong><button class="round-action" onclick="closeCC()">✕</button></div>
+  <div class="cc-grid">
+   <button class="cc-tile active" id="wifi-tile" onclick="toggleSetting('wifi')">◉<strong>Wi-Fi</strong></button>
+   <button class="cc-tile active" id="bt-tile" onclick="toggleSetting('bluetooth')">ᛒ<strong>Bluetooth</strong></button>
+   <button class="cc-tile" id="air-tile" onclick="toggleSetting('airplane')">✈<strong>وضع الطيران</strong></button>
+   <button class="cc-tile" onclick="toast('وضع التركيز التجريبي')">☾<strong>التركيز</strong></button>
+  </div>
+  <div class="cc-slider">☀️ السطوع <input id="brightness-slider" type="range" min="45" max="120" value="100" oninput="setBrightness(this.value)"></div>
+  <div class="cc-slider">🔊 مستوى الصوت <input id="volume-slider" type="range" min="0" max="100" value="70" oninput="setVolume(this.value)"></div>
+  <div class="cc-grid" style="margin-top:12px">
+   <button class="cc-tile" onclick="toast('تم تشغيل المصباح التجريبي')">🔦<strong>مصباح</strong></button>
+   <button class="cc-tile" onclick="openApp('settings')">⚙️<strong>كل الإعدادات</strong></button>
+  </div>
+ </section>
+ <section id="notification-panel">
+  <div class="row"><h2>الإشعارات</h2><button class="round-action" onclick="closeNotifications()">✕</button></div>
+  <div class="card" style="color:#171923;margin-top:25px">🔔 <strong>مرحباً بك في RINO iOS</strong><p class="muted">هذه محاكاة تفاعلية لنظام هاتف داخل المتصفح.</p></div>
+  <button class="soft" onclick="toast('تم مسح الإشعارات')">مسح الكل</button>
+ </section>
+ <section id="app-window">
+  <header class="appbar"><button onclick="closeApp()">رجوع</button><h2 id="app-title">التطبيق</h2><button onclick="goHome()">الرئيسية</button></header>
+  <div class="appbody" id="app-body"></div>
+ </section>
+ <div id="home-indicator"></div>
+ <div id="toast"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const apps=[
+ {id:'phone',name:'الهاتف',icon:'📞',color:'linear-gradient(145deg,#70e18c,#18a84c)'},
+ {id:'messages',name:'الرسائل',icon:'💬',color:'linear-gradient(145deg,#8ce77e,#21b84f)'},
+ {id:'safari',name:'Safari',icon:'🧭',color:'linear-gradient(145deg,#8eeaff,#1674e8)'},
+ {id:'photos',name:'الصور',icon:'🌈',color:'linear-gradient(145deg,#ffcc67,#ed679d)'},
+ {id:'camera',name:'الكاميرا',icon:'📷',color:'linear-gradient(145deg,#b9c5d5,#596477)'},
+ {id:'settings',name:'الإعدادات',icon:'⚙️',color:'linear-gradient(145deg,#cbd3df,#667080)'},
+ {id:'notes',name:'الملاحظات',icon:'📝',color:'linear-gradient(145deg,#fff18b,#f0b62e)'},
+ {id:'calculator',name:'الحاسبة',icon:'🧮',color:'linear-gradient(145deg,#50545d,#17191d)'},
+ {id:'clock',name:'الساعة',icon:'⏰',color:'linear-gradient(145deg,#525967,#11151d)'},
+ {id:'calendar',name:'التقويم',icon:'📅',color:'linear-gradient(145deg,#fff,#e7eaf0)'},
+ {id:'music',name:'الموسيقى',icon:'🎵',color:'linear-gradient(145deg,#ff83aa,#a52f78)'},
+ {id:'weather',name:'الطقس',icon:'🌤️',color:'linear-gradient(145deg,#73caff,#3674db)'}
+];
+const dockApps=['phone','safari','messages','music'];
+let settings=JSON.parse(localStorage.getItem('rinoSettings')||'{"wifi":true,"bluetooth":true,"airplane":false,"wallpaper":0,"brightness":100}');
+let activeObjectURL=null,calcCurrent='0',calcStored=null,calcOp=null,calcFresh=false;
+function saveSettings(){localStorage.setItem('rinoSettings',JSON.stringify(settings))}
+function renderIcons(){
+ $('app-grid').innerHTML=apps.map(a=>iconHTML(a)).join('');
+ $('dock').innerHTML=dockApps.map(id=>iconHTML(apps.find(a=>a.id===id))).join('');
+}
+function iconHTML(a){return `<button class="app-icon" onclick="openApp('${a.id}')"><span class="glyph" style="background:${a.color}">${a.icon}</span><span>${a.name}</span></button>`}
+function nowUpdate(){
+ const d=new Date(),t=d.toLocaleTimeString('ar-TN',{hour:'2-digit',minute:'2-digit',hour12:false});
+ const date=d.toLocaleDateString('ar-TN',{weekday:'long',day:'numeric',month:'long'});
+ $('status-time').textContent=t;$('widget-time').textContent=t;$('lock-time').textContent=t;
+ $('date-label').textContent=date;$('lock-date').textContent=date;
+}
+setInterval(nowUpdate,1000);nowUpdate();renderIcons();
+function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(window.toastTimer);window.toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2100)}
+function unlock(){$('lock').classList.add('hidden')}
+function lockScreen(){$('lock').classList.remove('hidden');closeApp();closeCC();closeNotifications()}
+function closeCC(){$('control-center').classList.remove('show')}
+function closeNotifications(){$('notification-panel').classList.remove('show')}
+function toggleCC(){$('control-center').classList.toggle('show');closeNotifications()}
+function toggleNotifications(){$('notification-panel').classList.toggle('show');closeCC()}
+function toggleSetting(k){settings[k]=!settings[k];saveSettings();updateTiles();toast((k==='wifi'?'Wi-Fi':k==='bluetooth'?'Bluetooth':'وضع الطيران')+(settings[k]?' مفعّل':' متوقف'))}
+function updateTiles(){[['wifi','wifi-tile'],['bluetooth','bt-tile'],['airplane','air-tile']].forEach(([k,id])=>$(id).classList.toggle('active',settings[k]))}
+updateTiles();
+function setBrightness(v){settings.brightness=+v;document.documentElement.style.setProperty('--brightness',v/100);saveSettings()}
+function setVolume(v){localStorage.setItem('rinoVolume',v)}
+$('brightness-slider').value=settings.brightness;setBrightness(settings.brightness);
+function closeApp(){stopCamera();$('app-window').style.display='none'}
+function goHome(){closeApp();closeCC();closeNotifications()}
+function openApp(id){
+ unlock();closeCC();closeNotifications();
+ const app=apps.find(a=>a.id===id);if(!app)return;
+ $('app-title').textContent=app.name;$('app-window').style.display='flex';
+ const body=$('app-body');body.innerHTML='';
+ const renderers={phone:phoneApp,messages:messagesApp,safari:safariApp,photos:photosApp,camera:cameraApp,settings:settingsApp,notes:notesApp,calculator:calculatorApp,clock:clockApp,calendar:calendarApp,music:musicApp,weather:weatherApp};
+ renderers[id](body);
+}
+function phoneApp(b){
+ b.innerHTML=`<div class="card" style="text-align:center"><div class="big-number" id="dial-number" style="min-height:48px;direction:ltr"> </div><div class="muted">أدخل الرقم ثم اضغط اتصال لفتح تطبيق الهاتف</div></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:310px;margin:auto">${['1','2','3','4','5','6','7','8','9','*','0','#'].map(n=>`<button style="height:65px;border-radius:50%;background:#e9edf3;color:#171923;font-size:24px" onclick="dial('${n}')">${n}</button>`).join('')}</div><a id="real-call-link" class="primary" href="tel:" style="display:block;text-align:center;text-decoration:none;width:100%;margin-top:18px">📞 اتصال</a><button class="soft" style="width:100%;margin-top:8px" onclick="$('dial-number').textContent='';$('real-call-link').href='tel:'">مسح الرقم</button><p class="muted" style="text-align:center;margin-top:12px">سيطلب منك الهاتف تأكيد الاتصال في تطبيق الاتصال.</p>`;
+}
+function dial(n){const el=$('dial-number');el.textContent+=n;const number=el.textContent.replace(/[^0-9+*#]/g,'');$('real-call-link').href='tel:'+number}
+function messagesApp(b){
+ const key='rinoMessages',msgs=JSON.parse(localStorage.getItem(key)||'[]');
+ b.innerHTML=`<div class="card"><strong>الرسائل</strong><p class="muted">محادثة محلية تجريبية، لا ترسل SMS حقيقية.</p></div><div class="card message-area" id="message-list">${msgs.map(m=>`<div class="bubble ${m.me?'me':''}">${escapeHTML(m.text)}</div>`).join('')}</div><div class="chat-compose"><input class="field" id="message-input" placeholder="اكتب رسالة..."><button class="primary" onclick="sendMessage()">إرسال</button></div>`;
+}
+function sendMessage(){const i=$('message-input'),v=i.value.trim();if(!v)return;const arr=JSON.parse(localStorage.getItem('rinoMessages')||'[]');arr.push({text:v,me:true});localStorage.setItem('rinoMessages',JSON.stringify(arr));messagesApp($('app-body'))}
+function escapeHTML(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function safariApp(b){
+ b.innerHTML=`<div style="text-align:center;padding:25px 0"><div style="font-size:45px">🧭</div><h2>Safari</h2><p class="muted">تصفح الإنترنت</p></div><div class="row"><input id="web-query" class="field" placeholder="ابحث أو اكتب عنوان موقع"><button class="primary" onclick="webSearch()">اذهب</button></div><div id="search-results" class="card" style="margin-top:15px"><p class="muted">اكتب عنوان موقع لفتحه أو كلمة للبحث.</p></div>`;
+}
+function webSearch(){let q=$('web-query').value.trim();if(!q)return;let url;if(/^https?:\/\//i.test(q))url=q;else if(q.includes('.')&&!q.includes(' '))url='https://'+q;else url='https://www.google.com/search?q='+encodeURIComponent(q);$('search-results').innerHTML=`<p>سيتم فتح:</p><a href="${url}" target="_blank" rel="noopener">فتح في تبويب جديد ↗</a>`;window.open(url,'_blank','noopener')}
+function photosApp(b){
+ b.innerHTML=`<div class="card"><h3>مكتبة الصور</h3><p class="muted">اختر صوراً من جهازك لعرضها هنا. تبقى الملفات على جهازك.</p><input type="file" accept="image/*" multiple id="photo-files" class="field" onchange="loadPhotos(this.files)"></div><div class="photo-grid" id="photo-grid"></div>`;
+}
+function loadPhotos(files){const grid=$('photo-grid');[...files].forEach(f=>{if(!f.type.startsWith('image/'))return;const u=URL.createObjectURL(f),img=document.createElement('img');img.src=u;img.onclick=()=>window.open(u,'_blank');grid.appendChild(img)})}
+function cameraApp(b){
+ b.innerHTML=`<div class="card"><h3>كاميرا الهاتف</h3><p class="muted">استخدم الكاميرا الحقيقية بعد السماح للمتصفح بالوصول إليها. يلزم فتح الصفحة عبر HTTPS أو localhost.</p><video id="camera-video" autoplay playsinline muted style="width:100%;border-radius:15px;background:#111;min-height:240px;object-fit:cover"></video><div class="row" style="margin-top:12px;flex-wrap:wrap"><button class="primary" onclick="startCamera()">تشغيل الكاميرا</button><button class="soft" onclick="switchCamera()">تبديل الأمامية / الخلفية</button></div><div class="row" style="margin-top:8px;flex-wrap:wrap"><button class="primary" onclick="takePhoto()">📸 التقاط صورة</button><button class="soft" onclick="stopCamera()">إيقاف الكاميرا</button></div><canvas id="camera-canvas" style="display:none"></canvas><div id="camera-shot"></div></div>`;
+}
+let cameraStream=null,cameraFacing='environment';
+async function startCamera(){
+ try{
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('الكاميرا تحتاج متصفحاً حديثاً واتصال HTTPS');return}
+  stopCamera();
+  cameraStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:cameraFacing}},audio:false});
+  $('camera-video').srcObject=cameraStream;
+  await $('camera-video').play();
+  toast('الكاميرا تعمل الآن')
+ }catch(e){toast('تعذر تشغيل الكاميرا. اسمح بالإذن وافتح الصفحة عبر HTTPS')}
+}
+async function switchCamera(){cameraFacing=cameraFacing==='environment'?'user':'environment';await startCamera()}
+function stopCamera(){if(cameraStream){cameraStream.getTracks().forEach(track=>track.stop());cameraStream=null}const v=$('camera-video');if(v)v.srcObject=null}
+function takePhoto(){
+ const v=$('camera-video');if(!v||!v.videoWidth){toast('شغّل الكاميرا أولاً');return}
+ const c=$('camera-canvas');c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0);
+ const data=c.toDataURL('image/jpeg',.92),img=document.createElement('img');img.src=data;img.style='width:100%;border-radius:12px;margin-top:10px';
+ const area=$('camera-shot');area.replaceChildren(img);
+ const link=document.createElement('a');link.href=data;link.download='RINO-photo-'+Date.now()+'.jpg';link.textContent='⬇ حفظ الصورة';link.className='primary';link.style='display:block;text-align:center;textDecoration="none";marginTop="10px"';
+ link.style.textDecoration='none';link.style.marginTop='10px';link.style.padding='11px';link.style.borderRadius='12px';area.appendChild(link);
+}
+function settingsApp(b){
+ b.innerHTML=`<div class="card"><div class="row"><div><strong>RINO iOS</strong><div class="muted">الإصدار التجريبي 1.0</div></div><div style="font-size:35px">📱</div></div></div><div class="card">
+ ${[['wifi','Wi-Fi','📶'],['bluetooth','Bluetooth','ᛒ'],['airplane','وضع الطيران','✈️']].map(([k,n,ic])=>`<div class="listitem"><span class="listicon" style="background:#4389dc">${ic}</span><div style="flex:1">${n}</div><button class="toggle ${settings[k]?'on':''}" onclick="toggleSetting('${k}');this.classList.toggle('on')"></button></div>`).join('')}
+ <div class="listitem"><span class="listicon" style="background:#777">☀️</span><div style="flex:1">سطوع الشاشة<input type="range" min="45" max="120" value="${settings.brightness}" style="width:100%" oninput="setBrightness(this.value)"></div></div></div>
+ <div class="card"><h3>الخلفية</h3><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">${[
+ 'linear-gradient(145deg,#07152f,#183e73,#8a4d9d)',
+ 'linear-gradient(145deg,#001b18,#087f72,#8be2b5)',
+ 'linear-gradient(145deg,#260d40,#7935a8,#f28cae)',
+ 'linear-gradient(145deg,#1b1b1b,#555,#b8b8b8)',
+ 'linear-gradient(145deg,#092c55,#0a83c7,#8ce8ff)',
+ 'linear-gradient(145deg,#41111e,#bd344d,#ffbd83)'
+ ].map((w,i)=>`<button class="wallpaper-choice ${settings.wallpaper===i?'selected':''}" style="background:${w}" onclick="setWallpaper(${i})"></button>`).join('')}</div></div>
+ <div class="card"><button class="soft" style="width:100%" onclick="lockScreen()">🔒 قفل الشاشة</button><button class="soft" style="width:100%;margin-top:9px" onclick="if(confirm('إعادة ضبط إعدادات RINO iOS؟')){localStorage.removeItem('rinoSettings');location.reload()}">إعادة ضبط الإعدادات</button></div>`;
+}
+const wallpapers=['linear-gradient(145deg,#07152f 0%,#183e73 43%,#8a4d9d 100%)','linear-gradient(145deg,#001b18,#087f72,#8be2b5)','linear-gradient(145deg,#260d40,#7935a8,#f28cae)','linear-gradient(145deg,#1b1b1b,#555,#b8b8b8)','linear-gradient(145deg,#092c55,#0a83c7,#8ce8ff)','linear-gradient(145deg,#41111e,#bd344d,#ffbd83)'];
+function setWallpaper(i){settings.wallpaper=i;saveSettings();$('wallpaper').style.background=wallpapers[i];toast('تم تغيير الخلفية');settingsApp($('app-body'))}
+$('wallpaper').style.background=wallpapers[settings.wallpaper||0];
+function notesApp(b){
+ const note=localStorage.getItem('rinoNote')||'';
+ b.innerHTML=`<div class="card"><div class="row"><h3>ملاحظاتي</h3><span class="muted">حفظ تلقائي</span></div><textarea id="note-text" placeholder="اكتب ملاحظاتك هنا...">${escapeHTML(note)}</textarea><p class="muted" id="note-status">تُحفظ الملاحظات على هذا المتصفح.</p></div>`;
+ $('note-text').addEventListener('input',e=>{localStorage.setItem('rinoNote',e.target.value);$('note-status').textContent='تم الحفظ ✓'});
+}
+function calculatorApp(b){
+ b.innerHTML=`<div class="calc"><div class="calc-display" id="calc-display">0</div><div class="calc-grid">${['AC','±','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','0','.','⌫','='].map((x,i)=>`<button class="${[0,1,2,19].includes(i)?'fn':[3,7,11,15].includes(i)?'op':''}" style="${x==='0'?'grid-column:span 1;border-radius:40px':''}" onclick="calcPress('${x}')">${x}</button>`).join('')}</div></div>`;
+}
+function calcPress(x){
+ if(x==='AC'){calcCurrent='0';calcStored=null;calcOp=null}
+ else if(x==='⌫'){calcCurrent=calcCurrent.length>1?calcCurrent.slice(0,-1):'0'}
+ else if(x==='±'){calcCurrent=String(-Number(calcCurrent))}
+ else if(x==='%'){calcCurrent=String(Number(calcCurrent)/100)}
+ else if(['÷','×','−','+'].includes(x)){calcStored=Number(calcCurrent);calcOp=x;calcFresh=true}
+ else if(x==='='){if(calcStored!==null&&calcOp){let a=calcStored,c=Number(calcCurrent);let r=calcOp==='+'?a+c:calcOp==='−'?a-c:calcOp==='×'?a*c:c===0?'خطأ':a/c;calcCurrent=String(Number.isFinite(r)?Number(r.toFixed(8)):r);calcStored=null;calcOp=null}}
+ else if(x==='.'){if(!calcCurrent.includes('.'))calcCurrent+='.'}
+ else{calcCurrent=(calcFresh||calcCurrent==='0')?x:calcCurrent+x;calcFresh=false}
+ $('calc-display').textContent=calcCurrent;
+}
+function clockApp(b){
+ b.innerHTML=`<div class="card" style="text-align:center;padding:30px"><div style="font-size:54px">🕒</div><div class="big-number" id="clock-live"></div><div class="muted">${new Date().toLocaleDateString('ar-TN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div></div><div class="card"><h3>مؤقت</h3><div class="row"><input class="field" id="timer-seconds" type="number" min="1" value="60" style="max-width:120px"><button class="primary" onclick="startTimer()">ابدأ</button></div><div id="timer-label" class="big-number" style="text-align:center;margin-top:12px">01:00</div></div><div class="card"><h3>ساعة الإيقاف</h3><div id="stopwatch" class="big-number">00:00.0</div><div class="row"><button class="primary" onclick="stopwatchToggle()">بدء / إيقاف</button><button class="soft" onclick="stopwatchReset()">إعادة</button></div></div>`;
+ updateClockApp();
+}
+setInterval(()=>{if($('clock-live'))updateClockApp()},500);
+function updateClockApp(){$('clock-live').textContent=new Date().toLocaleTimeString('ar-TN')}
+let timerInterval=null,swInterval=null,swStart=0,swElapsed=0;
+function startTimer(){clearInterval(timerInterval);let n=Math.max(1,Number($('timer-seconds').value)||60),end=Date.now()+n*1000;timerInterval=setInterval(()=>{let left=Math.max(0,Math.ceil((end-Date.now())/1000));$('timer-label').textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');if(!left){clearInterval(timerInterval);toast('انتهى المؤقت')}},200)}
+function stopwatchToggle(){if(swInterval){clearInterval(swInterval);swInterval=null;swElapsed+=Date.now()-swStart}else{swStart=Date.now();swInterval=setInterval(()=>{let t=swElapsed+Date.now()-swStart;$('stopwatch').textContent=(t/60000|0).toString().padStart(2,'0')+':'+((t/1000|0)%60).toString().padStart(2,'0')+'.'+(t%1000/100|0)},100)}}
+function stopwatchReset(){clearInterval(swInterval);swInterval=null;swElapsed=0;$('stopwatch').textContent='00:00.0'}
+function calendarApp(b){
+ const d=new Date();b.innerHTML=`<div class="card" style="text-align:center"><div class="muted">${d.toLocaleDateString('ar-TN',{weekday:'long'})}</div><div style="font-size:72px;color:#e34c4c">${d.getDate()}</div><h2>${d.toLocaleDateString('ar-TN',{month:'long',year:'numeric'})}</h2></div><div class="card"><h3>إضافة تذكير</h3><input id="event-name" class="field" placeholder="عنوان التذكير"><input id="event-date" type="date" class="field" style="margin-top:8px"><button class="primary" style="width:100%;margin-top:9px" onclick="addEvent()">حفظ التذكير</button></div><div class="card" id="events-list"><h3>تذكيراتي</h3>${renderEvents()}</div>`;
+}
+function renderEvents(){return (JSON.parse(localStorage.getItem('rinoEvents')||'[]')).map(e=>`<div class="listitem">📌 <div><strong>${escapeHTML(e.name)}</strong><div class="muted">${e.date}</div></div></div>`).join('')||'<p class="muted">لا توجد تذكيرات بعد.</p>'}
+function addEvent(){let name=$('event-name').value.trim(),date=$('event-date').value;if(!name||!date){toast('أدخل عنواناً وتاريخاً');return}let a=JSON.parse(localStorage.getItem('rinoEvents')||'[]');a.push({name,date});localStorage.setItem('rinoEvents',JSON.stringify(a));$('events-list').innerHTML='<h3>تذكيراتي</h3>'+renderEvents();$('event-name').value=''}
+function musicApp(b){
+ b.innerHTML=`<div class="card" style="text-align:center;padding:30px"><div style="font-size:85px">🎵</div><h2>الموسيقى</h2><p class="muted">اختر ملفاً صوتياً من جهازك</p><input type="file" class="field" accept="audio/*" id="audio-file" onchange="loadAudio(this.files[0])"><div id="audio-name" class="muted" style="margin-top:12px"></div><audio id="music-audio" controls></audio></div>`;
+}
+function loadAudio(f){if(!f)return;if(activeObjectURL)URL.revokeObjectURL(activeObjectURL);activeObjectURL=URL.createObjectURL(f);$('music-audio').src=activeObjectURL;$('audio-name').textContent=f.name}
+function weatherApp(b){b.innerHTML=`<div class="card" style="text-align:center;padding:30px"><div style="font-size:75px">☀️</div><h2 style="font-size:42px;margin:5px">24°</h2><h3>مشمس</h3><p class="muted">بيانات طقس تجريبية وليست توقعات مباشرة.</p></div><div class="card row"><span>🌡️ الحرارة</span><strong>24°</strong></div><div class="card row"><span>💨 الرياح</span><strong>12 كم/س</strong></div><div class="card row"><span>💧 الرطوبة</span><strong>45%</strong></div>`}
+let touchStartY=0,touchStartX=0;
+$('device').addEventListener('touchstart',e=>{touchStartY=e.touches[0].clientY;touchStartX=e.touches[0].clientX},{passive:true});
+$('device').addEventListener('touchend',e=>{
+ const dy=e.changedTouches[0].clientY-touchStartY,dx=e.changedTouches[0].clientX-touchStartX;
+ if(touchStartY<42&&dy>70)toggleCC();
+ else if(touchStartY>window.innerHeight-45&&dy< -60)goHome();
+ else if(touchStartY<90&&dy>100&&touchStartX>window.innerWidth*.35)toggleNotifications();
+},{passive:true});
+$('home-indicator').addEventListener('click',goHome);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeApp();closeCC();closeNotifications()}});
+</script>
+</body>
+</html>
